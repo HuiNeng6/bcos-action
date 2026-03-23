@@ -28,10 +28,27 @@ cd "$PATH_ARG" || exit 1
 
 # Run BCOS scan
 echo "Running BCOS v2 scan..."
-python3 /usr/local/bin/bcos_engine.py . --tier "$TIER" --reviewer "$REVIEWER" --json > /tmp/bcos_report.json 2>&1 || true
+python3 /usr/local/bin/bcos_engine.py . --tier "$TIER" --reviewer "$REVIEWER" --json > /tmp/bcos_report.json 2>/tmp/bcos_error.log || true
+
+# Debug: show any errors
+if [ -s /tmp/bcos_error.log ]; then
+    echo "⚠️ Warnings/Errors from BCOS engine:"
+    cat /tmp/bcos_error.log
+fi
 
 # Parse results
-if [ -f /tmp/bcos_report.json ]; then
+if [ -f /tmp/bcos_report.json ] && [ -s /tmp/bcos_report.json ]; then
+    # Validate JSON
+    if ! jq empty /tmp/bcos_report.json 2>/dev/null; then
+        echo "❌ Invalid JSON output from BCOS engine"
+        echo "Raw output:"
+        cat /tmp/bcos_report.json
+        echo "trust_score=0" >> $GITHUB_OUTPUT
+        echo "cert_id=error" >> $GITHUB_OUTPUT
+        echo "tier_met=false" >> $GITHUB_OUTPUT
+        exit 1
+    fi
+    
     TRUST_SCORE=$(jq -r '.trust_score // 0' /tmp/bcos_report.json)
     CERT_ID=$(jq -r '.cert_id // "pending"' /tmp/bcos_report.json)
     TIER_MET=$(jq -r '.tier_met // false' /tmp/bcos_report.json)
