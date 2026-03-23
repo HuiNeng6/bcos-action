@@ -1,0 +1,102 @@
+# Example: BCOS v2 L2 Tier Scan with Human Review
+# Requires human reviewer attestation for L2 tier
+# Copy this file to .github/workflows/bcos-l2-scan.yml
+
+name: BCOS v2 L2 Scan
+
+on:
+  pull_request:
+    branches: [main, master]
+    types: [opened, synchronize, review_requested]
+
+jobs:
+  bcos-scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      
+      - name: Get Reviewer
+        id: reviewer
+        run: |
+          # Use PR author if they are a maintainer, otherwise use the requested reviewer
+          REVIEWER="${{ github.actor }}"
+          echo "reviewer=$REVIEWER" >> $GITHUB_OUTPUT
+      
+      - name: Run BCOS v2 L2 Scan
+        id: bcos
+        uses: HuiNeng6/bcos-action@v1
+        with:
+          tier: 'L2'
+          reviewer: '${{ steps.reviewer.outputs.reviewer }}'
+          fail-on-unmet: 'false'
+      
+      - name: Check L2 Requirements
+        run: |
+          if [ "${{ steps.bcos.outputs.tier_met }}" != "true" ]; then
+            echo "::warning::L2 tier requirements not met. Score: ${{ steps.bcos.outputs.trust_score }}/100"
+            echo "To achieve L2 certification:"
+            echo "- Score must be >= 80"
+            echo "- Human reviewer must be specified"
+          fi
+      
+      - name: Post Detailed PR Comment
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const score = parseInt('${{ steps.bcos.outputs.trust_score }}' || '0');
+            const certId = '${{ steps.bcos.outputs.cert_id }}';
+            const tierMet = '${{ steps.bcos.outputs.tier_met }}' === 'true';
+            const reviewer = '${{ steps.reviewer.outputs.reviewer }}';
+            
+            // Determine badge color based on score
+            let badgeColor = 'red';
+            if (score >= 80) badgeColor = 'brightgreen';
+            else if (score >= 60) badgeColor = 'yellow';
+            else if (score >= 40) badgeColor = 'orange';
+            
+            const badge = `![BCOS Badge](https://img.shields.io/badge/BCOS-${score}%2F100-${badgeColor})`;
+            
+            // Build score breakdown table
+            const scoreEmoji = score >= 80 ? '🟢' : score >= 60 ? '🟡' : '🔴';
+            const tierEmoji = tierMet ? '✅' : '❌';
+            
+            const body = `## 🛡️ BCOS v2 L2 Scan Results
+            
+            ${badge}
+            
+            ### Summary
+            
+            | Metric | Value |
+            |--------|-------|
+            | Trust Score | ${scoreEmoji} **${score}/100** |
+            | Cert ID | \`${certId}\` |
+            | Tier Claimed | L2 |
+            | Tier Met | ${tierEmoji} ${tierMet ? 'Yes' : 'No'} |
+            | Reviewer | @${reviewer} |
+            
+            ### L2 Requirements
+            
+            | Requirement | Status |
+            |-------------|--------|
+            | Score ≥ 80 | ${score >= 80 ? '✅' : '❌'} ${score}/80 |
+            | Human Reviewer | ${reviewer ? '✅' : '❌'} ${reviewer || 'none'} |
+            
+            ${tierMet ? 
+              '### ✅ L2 Certification Achieved\n\nThis PR meets L2 requirements and can be merged with human approval.' :
+              '### ⚠️ L2 Requirements Not Met\n\nPlease address the issues above to achieve L2 certification.'}
+            
+            ---
+            *BCOS v2 Engine • [Verify Certificate](https://rustchain.org/bcos/verify/${certId})*`;
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: body
+            });

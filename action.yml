@@ -1,0 +1,60 @@
+# GitHub Action: BCOS v2 Scanner
+# Beacon Certified Open Source verification for any repository
+
+name: 'BCOS v2 Scanner'
+description: 'Run BCOS (Beacon Certified Open Source) v2 verification scan on your repository'
+author: 'RustChain Community'
+
+branding:
+  icon: 'shield'
+  color: 'blue'
+
+inputs:
+  tier:
+    description: 'Certification tier to target (L0, L1, or L2)'
+    required: false
+    default: 'L1'
+  reviewer:
+    description: 'Human reviewer name/handle (required for L2 tier)'
+    required: false
+    default: ''
+  node-url:
+    description: 'RustChain node URL for on-chain anchoring (optional)'
+    required: false
+    default: ''
+  path:
+    description: 'Repository path to scan (default: current directory)'
+    required: false
+    default: '.'
+  fail-on-unmet:
+    description: 'Fail the action if tier is not met'
+    required: false
+    default: 'false'
+
+outputs:
+  trust_score:
+    description: 'Computed trust score (0-100)'
+    value: ${{ steps.bcos-scan.outputs.trust_score }}
+  cert_id:
+    description: 'BCOS certificate ID'
+    value: ${{ steps.bcos-scan.outputs.cert_id }}
+  tier_met:
+    description: 'Whether the claimed tier was met (true/false)'
+    value: ${{ steps.bcos-scan.outputs.tier_met }}
+  report_json:
+    description: 'Path to the full JSON report'
+    value: ${{ steps.bcos-scan.outputs.report_path }}
+
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  args:
+    - ${{ inputs.path }}
+    - --tier
+    - ${{ inputs.tier }}
+    - --reviewer
+    - ${{ inputs.reviewer }}
+    - --node-url
+    - ${{ inputs.node-url }}
+    - --fail-on-unmet
+    - ${{ inputs.fail-on-unmet }}
