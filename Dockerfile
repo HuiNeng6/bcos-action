@@ -5,6 +5,10 @@ FROM python:3.11-slim
 
 LABEL maintainer="RustChain Community"
 LABEL description="BCOS v2 Scanner for GitHub Actions"
+LABEL version="1.0.2"
+
+# Cache buster
+ARG CACHE_DATE=2026-03-23
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
