@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: MIT
 """
-BCOS v2 Engine 鈥?Beacon Certified Open Source verification.
+BCOS v2 Engine — Beacon Certified Open Source verification.
 
 Standalone verification engine that scans a repository and produces
 a trust score (0-100), structured JSON report, and BLAKE2b commitment
@@ -18,7 +18,7 @@ Trust Score Formula (transparent):
     dependency_freshness   5 pts  % deps at latest version
     test_evidence         10 pts  test suite present & passing
     review_attestation    10 pts  L0=0, L1=5, L2=10
-    鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+    ─────────────────────────
     TOTAL                100
 
 Tier Thresholds: L0 >= 40, L1 >= 60, L2 >= 80 + human Ed25519 signature.
@@ -43,7 +43,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 
-# 鈹€鈹€ Score weights 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+# ── Score weights ──────────────────────────────────────────────────
 SCORE_WEIGHTS = {
     "license_compliance": 20,
     "vulnerability_scan": 25,
@@ -174,7 +174,7 @@ class BCOSEngine:
             return False
         return True
 
-    # 鈹€鈹€ Check 1: License Compliance (20 pts) 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+    # ── Check 1: License Compliance (20 pts) ──────────────────────
 
     def _check_spdx(self):
         """Check SPDX headers on code files + dependency license scan."""
@@ -242,7 +242,7 @@ class BCOSEngine:
         except Exception:
             return 5
 
-    # 鈹€鈹€ Check 2: Vulnerability Scan (25 pts) 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+    # ── Check 2: Vulnerability Scan (25 pts) ──────────────────────
 
     def _check_osv(self):
         """Scan for known CVEs via pip-audit or osv-scanner."""
@@ -317,7 +317,7 @@ class BCOSEngine:
         }
         self.score_breakdown["vulnerability_scan"] = pts
 
-    # 鈹€鈹€ Check 3: Static Analysis (20 pts) 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+    # ── Check 3: Static Analysis (20 pts) ─────────────────────────
 
     def _check_semgrep(self):
         """Run Semgrep static analysis."""
@@ -376,7 +376,7 @@ class BCOSEngine:
         }
         self.score_breakdown["static_analysis"] = pts
 
-    # 鈹€鈹€ Check 4: SBOM Completeness (10 pts) 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+    # ── Check 4: SBOM Completeness (10 pts) ───────────────────────
 
     def _check_sbom(self):
         """Generate CycloneDX SBOM."""
@@ -437,7 +437,7 @@ class BCOSEngine:
         }
         self.score_breakdown["sbom_completeness"] = pts
 
-    # 鈹€鈹€ Check 5: Dependency Freshness (5 pts) 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+    # ── Check 5: Dependency Freshness (5 pts) ─────────────────────
 
     def _check_dep_freshness(self):
         """Check what percentage of deps are at latest version."""
@@ -481,7 +481,7 @@ class BCOSEngine:
         }
         self.score_breakdown["dependency_freshness"] = pts
 
-    # 鈹€鈹€ Check 6: Test Evidence (10 pts) 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+    # ── Check 6: Test Evidence (10 pts) ────────────────────────────
 
     def _check_test_evidence(self):
         """Detect test infrastructure and evidence of test runs."""
@@ -555,7 +555,7 @@ class BCOSEngine:
         }
         self.score_breakdown["test_evidence"] = pts
 
-    # 鈹€鈹€ Check 7: Review Attestation (10 pts) 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+    # ── Check 7: Review Attestation (10 pts) ──────────────────────
 
     def _check_review(self):
         """Check review tier attestation level."""
@@ -590,7 +590,7 @@ class BCOSEngine:
         }
         self.score_breakdown["review_attestation"] = pts
 
-    # 鈹€鈹€ Score computation 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+    # ── Score computation ──────────────────────────────────────────
 
     def _compute_trust_score(self):
         """Ensure all scores are capped at their maximums."""
@@ -603,7 +603,7 @@ class BCOSEngine:
                 self.score_breakdown[key] = 0
 
 
-# 鈹€鈹€ Convenience function 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+# ── Convenience function ──────────────────────────────────────────
 
 def scan_repo(
     path: str = ".",
@@ -616,7 +616,7 @@ def scan_repo(
     return engine.run_all()
 
 
-# 鈹€鈹€ CLI 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+# ── CLI ───────────────────────────────────────────────────────────
 
 def _print_report(report: dict, as_json: bool = False):
     """Pretty-print a BCOS report."""
@@ -642,13 +642,13 @@ def _print_report(report: dict, as_json: bool = False):
     tier_color = {"L0": GREEN, "L1": CYAN, "L2": PURPLE}.get(tier, CYAN)
 
     print()
-    print(f"{BOLD}鈺斺晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晽{NC}")
-    print(f"{BOLD}鈺? BCOS v2 鈥?Beacon Certified Open Source          鈺憑NC}")
-    print(f"{BOLD}鈺氣晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨暆{NC}")
+    print(f"{BOLD}╔══════════════════════════════════════════════════╗{NC}")
+    print(f"{BOLD}║  BCOS v2 — Beacon Certified Open Source          ║{NC}")
+    print(f"{BOLD}╚══════════════════════════════════════════════════╝{NC}")
     print()
     print(f"  Repo:       {report.get('repo_name', report['repo_path'])}")
     print(f"  Commit:     {report['commit_sha'][:12]}")
-    print(f"  Tier:       {tier_color}{tier}{NC} {'鉁?met' if met else '鉁?not met'}")
+    print(f"  Tier:       {tier_color}{tier}{NC} {'✓ met' if met else '✗ not met'}")
     if report.get("reviewer"):
         print(f"  Reviewer:   {report['reviewer']}")
     print(f"  Cert ID:    {BOLD}{cert_id}{NC}")
@@ -657,7 +657,7 @@ def _print_report(report: dict, as_json: bool = False):
     # Score bar
     bar_width = 40
     filled = int(score / 100 * bar_width)
-    bar = "鈻? * filled + "鈻? * (bar_width - filled)
+    bar = "█" * filled + "░" * (bar_width - filled)
     score_color = GREEN if score >= 80 else YELLOW if score >= 60 else RED
     print(f"  Trust Score: {score_color}{BOLD}{score}/100{NC}")
     print(f"  [{score_color}{bar}{NC}]")
@@ -665,7 +665,7 @@ def _print_report(report: dict, as_json: bool = False):
 
     # Breakdown table
     print(f"  {DIM}{'Component':<25} {'Score':>5} {'Max':>5}{NC}")
-    print(f"  {DIM}{'鈹€' * 37}{NC}")
+    print(f"  {DIM}{'─' * 37}{NC}")
     for key, max_pts in SCORE_WEIGHTS.items():
         pts = report["score_breakdown"].get(key, 0)
         name = key.replace("_", " ").title()
@@ -677,7 +677,7 @@ def _print_report(report: dict, as_json: bool = False):
     # Check details summary
     for check_name, check_data in report["checks"].items():
         passed = check_data.get("passed")
-        icon = f"{GREEN}鉁搟NC}" if passed else f"{RED}鉁梴NC}" if passed is False else f"{YELLOW}?{NC}"
+        icon = f"{GREEN}✓{NC}" if passed else f"{RED}✗{NC}" if passed is False else f"{YELLOW}?{NC}"
         name = check_name.replace("_", " ").title()
         detail = ""
 
@@ -706,14 +706,14 @@ def _print_report(report: dict, as_json: bool = False):
     print(f"  {DIM}Commitment: {report.get('commitment', 'pending')[:32]}...{NC}")
     print(f"  {DIM}Verify: https://rustchain.org/bcos/verify/{cert_id}{NC}")
     print()
-    print(f"  {DIM}BCOS v2 Engine {report.get('engine_version', '2.0.0')} 鈥?Free & Open Source (MIT){NC}")
+    print(f"  {DIM}BCOS v2 Engine {report.get('engine_version', '2.0.0')} — Free & Open Source (MIT){NC}")
     print(f"  {DIM}https://github.com/Scottcjn/Rustchain{NC}")
     print()
 
 
 def main():
     ap = argparse.ArgumentParser(
-        description="BCOS v2 鈥?Beacon Certified Open Source verification engine"
+        description="BCOS v2 — Beacon Certified Open Source verification engine"
     )
     ap.add_argument("path", nargs="?", default=".", help="Repository path to scan")
     ap.add_argument("--tier", default="L1", choices=["L0", "L1", "L2"],
